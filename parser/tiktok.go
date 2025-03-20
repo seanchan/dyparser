@@ -68,6 +68,7 @@ func (d tiktok) ParseByShareURL(shareURL string) (*VideoParseInfo, error) {
 		return nil, errors.New("find failed")
 	}
 	jsonBytes := bytes.TrimSpace(findRes[1])
+	log.Println("found json", string(jsonBytes))
 	jsonVal := make(map[string]any)
 	json.Unmarshal(jsonBytes, &jsonVal)
 
