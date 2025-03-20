@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/seanchan/dyparser/parser"
 )
 
 type HttpResponse struct {
@@ -27,9 +28,16 @@ func main() {
 		}
 		c.JSON(http.StatusOK, jsonRes)
 	})
+	r.GET("/parse", func(c *gin.Context) {
+		result, err := parser.Parse(c)
+		if err != nil {
+			c.JSON(http.StatusForbidden, HttpResponse{Code: 404, Msg: err.Error()})
+		}
+		c.JSON(http.StatusOK, HttpResponse{Code: 200, Data: result})
+	})
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8081",
 		Handler: r,
 	}
 	go func() {
