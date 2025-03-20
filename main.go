@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/seanchan/dyparser/parser"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 type HttpResponse struct {
@@ -20,13 +21,17 @@ type HttpResponse struct {
 }
 
 func main() {
+	// 初始化zap logger
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
 	// 设置viper读取配置文件
 	viper.SetConfigName("config") // 配置文件名 (不带扩展名)
 	viper.SetConfigType("yaml")   // 配置文件类型
 	viper.AddConfigPath(".")      // 配置文件路径
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+		sugar.Fatalf("Error reading config file, %s", err)
 	}
 
 	port := viper.GetString("server.port")
@@ -63,7 +68,7 @@ func main() {
 	}
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			sugar.Fatalf("listen: %s\n", err)
 		}
 	}()
 
@@ -71,12 +76,12 @@ func main() {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Println("Shutdown Server ...")
+	fmt.Println("Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		sugar.Fatal("Server Shutdown:", err)
 	}
-	log.Println("Server exiting")
+	fmt.Println("Server exiting")
 }

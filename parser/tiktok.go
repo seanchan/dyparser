@@ -9,14 +9,18 @@ import (
 	"regexp"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/spf13/viper"
 )
 
 type tiktok struct{}
 
-func (d tiktok) ParseByShareID(videoId string) (*VideoParseInfo, error) {
-	reqURL := fmt.Sprintf("https://www.tiktok.com/_/%s", videoId)
+func (d tiktok) ParseByShareID(videoID string) (*VideoParseInfo, error) {
+	reqURL := fmt.Sprintf("https://www.tiktok.com/_/%s", videoID)
 	client := resty.New()
-	client.SetProxy("http://127.0.0.1:7890")
+	proxyURL := viper.GetString("proxy.url")
+	if proxyURL != "" {
+		client.SetProxy(proxyURL)
+	}
 	res, err := client.R().
 		SetHeader("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1 Edg/122.0.0.0").
 		Get(reqURL)
@@ -31,11 +35,11 @@ func (d tiktok) ParseByShareID(videoId string) (*VideoParseInfo, error) {
 		return nil, errors.New("find failed")
 	}
 	jsonBytes := bytes.TrimSpace(findRes[1])
-	jsonVal := make(map[string]interface{})
+	jsonVal := make(map[string]any)
 
 	json.Unmarshal(jsonBytes, &jsonVal)
 
-	scope := jsonVal["__DEFAULT_SCOPE__"].(map[string]interface{})
+	scope := jsonVal["__DEFAULT_SCOPE__"].(map[string]any)
 	videoParseInfo := &VideoParseInfo{
 		VideoSrc: Source{Data: scope},
 	}
@@ -43,13 +47,16 @@ func (d tiktok) ParseByShareID(videoId string) (*VideoParseInfo, error) {
 
 }
 
-func (d tiktok) ParseByShareURL(shareUrl string) (*VideoParseInfo, error) {
+func (d tiktok) ParseByShareURL(shareURL string) (*VideoParseInfo, error) {
 	client := resty.New()
-	client.SetProxy("http://127.0.0.1:7890")
+	proxyURL := viper.GetString("proxy.url")
+	if proxyURL != "" {
+		client.SetProxy(proxyURL)
+	}
 
 	res, err := client.R().
 		SetHeader("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1 Edg/122.0.0.0").
-		Get(shareUrl)
+		Get(shareURL)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +68,12 @@ func (d tiktok) ParseByShareURL(shareUrl string) (*VideoParseInfo, error) {
 		return nil, errors.New("find failed")
 	}
 	jsonBytes := bytes.TrimSpace(findRes[1])
-	jsonVal := make(map[string]interface{})
+	jsonVal := make(map[string]any)
 	json.Unmarshal(jsonBytes, &jsonVal)
 
-	scope := jsonVal["__DEFAULT_SCOPE__"].(map[string]interface{})
-	videoDetail := scope["webapp.reflow.video.detail"].(map[string]interface{})
-	itemInfo := videoDetail["itemInfo"].(map[string]interface{})
+	scope := jsonVal["__DEFAULT_SCOPE__"].(map[string]any)
+	videoDetail := scope["webapp.reflow.video.detail"].(map[string]any)
+	itemInfo := videoDetail["itemInfo"].(map[string]any)
 	videoParseInfo := &VideoParseInfo{
 		VideoSrc: Source{Data: itemInfo},
 	}

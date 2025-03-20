@@ -7,10 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HttpResponse struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+// HTTPResponse represents the structure of an HTTP response.
+type HTTPResponse struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
 }
 
 const (
@@ -32,7 +33,7 @@ type VideoParseInfo struct {
 
 // Source  represents the parsed information based on .
 type Source struct {
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 }
 
 // SourceVideoInfo represents the video information.

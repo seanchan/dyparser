@@ -1,2 +1,4 @@
 server:
   port: "8081"
+proxy:
+  url: "http://127.0.0.1:7890"
