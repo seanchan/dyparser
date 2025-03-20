@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,32 +80,16 @@ var videoParserMap = map[string]VideoParser{
 	},
 }
 
-// ParseVideoShareURL parses a video from a share URL.
-func ParseVideoShareURL(shareURL string) (*VideoParseInfo, error) {
-	source := "douyin"
-	log.Println("parse video share", shareURL)
-	parser := videoParserMap[source].VideoShareURLParser
-	log.Println("using parser:", parser)
-	return parser.ParseByShareURL(shareURL)
-}
-
-// ParseVideoID parses a video from a share ID.
-func ParseVideoID(shareID string) (*VideoParseInfo, error) {
-	source := "douyin"
-	parser := videoParserMap[source].VideoIDParser
-	return parser.ParseByShareID(shareID)
-}
-
 // Parse parses video information from the given context.
 func Parse(c *gin.Context) (*VideoParseInfo, error) {
 
 	query := c.Query("query")
 	source := c.Query("source")
-	_, exist := videoParserMap[source]
+	sourceParser, exist := videoParserMap[source]
 	if !exist {
 		return &VideoParseInfo{}, fmt.Errorf(fmt.Sprintf("Unknown parser %s", source))
 	}
-	return ParseVideoShareURL(query)
+	return sourceParser.VideoShareURLParser.ParseByShareURL(query)
 	// return ParseVideoID("7483514514890067219")
 	// return ParseVideoShareURL("https://www.tiktok.com/@naploes/video/7480531425259834642?is_from_webapp=1&sender_device=pc")
 }
