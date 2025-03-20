@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/seanchan/dyparser/parser"
+	"github.com/spf13/viper"
 )
 
 type HttpResponse struct {
@@ -19,6 +20,19 @@ type HttpResponse struct {
 }
 
 func main() {
+	// 设置viper读取配置文件
+	viper.SetConfigName("config") // 配置文件名 (不带扩展名)
+	viper.SetConfigType("yaml")   // 配置文件类型
+	viper.AddConfigPath(".")      // 配置文件路径
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Error reading config file, %s", err)
+	}
+
+	port := viper.GetString("server.port")
+	if port == "" {
+		port = "8081" // 默认端口
+	}
 	r := gin.Default()
 	r.GET("/hi", func(c *gin.Context) {
 		jsonRes := HttpResponse{
@@ -44,7 +58,7 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Addr:    ":8081",
+		Addr:    ":" + port,
 		Handler: r,
 	}
 	go func() {
