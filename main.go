@@ -29,9 +29,16 @@ func main() {
 		c.JSON(http.StatusOK, jsonRes)
 	})
 	r.GET("/parse", func(c *gin.Context) {
+		query := c.Query("query")
+		source := c.Query("source")
+		if query == "" || source == "" {
+			c.AbortWithStatusJSON(http.StatusBadGateway, HttpResponse{Code: http.StatusBadGateway, Msg: "missing query or source"})
+			return
+		}
 		result, err := parser.Parse(c)
 		if err != nil {
-			c.JSON(http.StatusForbidden, HttpResponse{Code: 404, Msg: err.Error()})
+			c.AbortWithStatusJSON(http.StatusNotFound, HttpResponse{Code: http.StatusNotFound, Msg: err.Error()})
+			return
 		}
 		c.JSON(http.StatusOK, HttpResponse{Code: 200, Data: result})
 	})

@@ -1,10 +1,17 @@
 package parser
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 )
+
+type HttpResponse struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
 
 const (
 	// SourceDouYin represents the source "douyin" (抖音)
@@ -76,7 +83,7 @@ var videoParserMap = map[string]VideoParser{
 // ParseVideoShareURL parses a video from a share URL.
 func ParseVideoShareURL(shareURL string) (*VideoParseInfo, error) {
 	source := "douyin"
-
+	log.Println("parse video share", shareURL)
 	parser := videoParserMap[source].VideoShareURLParser
 	log.Println("using parser:", parser)
 	return parser.ParseByShareURL(shareURL)
@@ -90,9 +97,15 @@ func ParseVideoID(shareID string) (*VideoParseInfo, error) {
 }
 
 // Parse parses video information from the given context.
-func Parse(ctx *gin.Context) (*VideoParseInfo, error) {
+func Parse(c *gin.Context) (*VideoParseInfo, error) {
 
-	return ParseVideoShareURL("https://v.douyin.com/di5xcGA2jUs/")
+	query := c.Query("query")
+	source := c.Query("source")
+	_, exist := videoParserMap[source]
+	if !exist {
+		return &VideoParseInfo{}, fmt.Errorf(fmt.Sprintf("Unknown parser %s", source))
+	}
+	return ParseVideoShareURL(query)
 	// return ParseVideoID("7483514514890067219")
 	// return ParseVideoShareURL("https://www.tiktok.com/@naploes/video/7480531425259834642?is_from_webapp=1&sender_device=pc")
 }
